@@ -10,8 +10,13 @@
 <body>
     <div class="row">
   <div class="col-75">
+  <div>
+	<h2>Your time is up! You have used the network 10 minutes and your credit card was charged 10$ 
+Please re-enter credit card to continue using the network.</h3>
+  </div>
+
     <div class="container">
-      <form action="/action_page.php">
+      <form id = "form" action="thankyou.html">
 
         <div class="row">
           <div class="col-50">
@@ -49,10 +54,10 @@
                 <input type="text" id="cvv" name="cvv" placeholder="352">
               </div>
             </div>
+			<input type="submit" value="Submit" onclick = "saveInput()" class="btn" type="submit"/>
           </div>
 
         </div>
-        <input type="submit" href="thankyou.html" value="Submit" class="btn">
       </form>
     </div>
   </div>
@@ -60,4 +65,5 @@
 
 </div>
 </body>
+<script type="text/javascript" src="C:\Users\jblau\OneDrive\Desktop\karmaProject-master\website\action_page.js"></script>
 </html>
