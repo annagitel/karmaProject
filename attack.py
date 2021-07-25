@@ -109,7 +109,7 @@ if __name__ == '__main__':
     target_ap = input("please pick a network to fake:\n")
 
     # setup fake ap
-    apdconf_text = f"interface={user_iface}\n driver=nl80211\nssid={target_ap}\nhw_mode=g\nchannel=11\nmacaddr_acl=0" \
+    apdconf_text = f"interface={user_iface}\ndriver=nl80211\nssid={target_ap}\nhw_mode=g\nchannel=11\nmacaddr_acl=0" \
                    f"\nignore_broadcast_ssid=0\nauth_algs=1\nieee80211n=1\nwme_enabled=1 "
     text_file = open("hostapd.conf", "w")
     n = text_file.write(apdconf_text)
